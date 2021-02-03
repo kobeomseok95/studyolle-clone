@@ -18,6 +18,7 @@ import javax.validation.Valid;
 public class AccountController {
 
     private final SignUpFormValidator signUpFormValidator;
+    private final AccountService accountService;
 
     @InitBinder("signUpForm")
     public void initBinder(WebDataBinder webDataBinder) {
@@ -30,16 +31,15 @@ public class AccountController {
         return "account/sign-up";
     }
 
-//    @PostMapping("/sign-up")
-//    public String signUpSubmit(@Valid SignUpForm signUpForm, Errors errors) {
-//        if (errors.hasErrors()) {
-//            return "account/sign-up";
-//        }
-//
-//        Account account = accountService.processNewAccount(signUpForm);
-//        accountService.login(account);
-//        return "redirect:/";
-//    }
+    @PostMapping("/sign-up")
+    public String signUpSubmit(@Valid SignUpForm signUpForm, Errors errors) {
+        if (errors.hasErrors()) {
+            return "account/sign-up";
+        }
+        Account account = accountService.processNewAccount(signUpForm);
+        accountService.login(account);
+        return "redirect:/";
+    }
 }
 
 
