@@ -1,5 +1,7 @@
 package com.clone.studyolle.account;
 
+import com.clone.studyolle.account.form.Notifications;
+import com.clone.studyolle.account.form.Profile;
 import com.clone.studyolle.account.form.SignUpForm;
 import com.clone.studyolle.config.AppProperties;
 import com.clone.studyolle.mail.EmailMessage;
@@ -138,6 +140,21 @@ public class AccountService implements UserDetailsService {
                 .build();
 
         emailService.sendEmail(emailMessage);
+    }
+
+    public void updateProfile(Account account, Profile profile) {
+        modelMapper.map(profile, account);
+        accountRepository.save(account);
+    }
+
+    public void updatePassword(Account account, String newPassword) {
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
+
+    public void updateNotification(Account account, Notifications notifications) {
+        modelMapper.map(notifications, account);
+        accountRepository.save(account);
     }
 }
 
