@@ -5,20 +5,27 @@ import com.clone.studyolle.account.form.PasswordForm;
 import com.clone.studyolle.account.form.Profile;
 import com.clone.studyolle.account.validator.NicknameValidator;
 import com.clone.studyolle.account.validator.PasswordFormValidator;
+import com.clone.studyolle.tag.Tag;
+import com.clone.studyolle.tag.TagForm;
+import com.clone.studyolle.tag.TagRepository;
+import com.clone.studyolle.tag.TagService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.clone.studyolle.account.SettingsController.*;
 import static com.clone.studyolle.account.SettingsController.ROOT;
@@ -40,9 +47,9 @@ public class SettingsController {
     private final AccountService accountService;
     private final ModelMapper modelMapper;
     private final NicknameValidator nicknameValidator;
-    //    private final TagService tagService;
-//    private final TagRepository tagRepository;
-//    private final ZoneRepository zoneRepository;
+    private final TagService tagService;
+    private final TagRepository tagRepository;
+    //    private final ZoneRepository zoneRepository;
     private final ObjectMapper objectMapper;
 
     @InitBinder("passwordForm")
@@ -126,6 +133,39 @@ public class SettingsController {
         return "redirect:/" + SETTINGS + NOTIFICATIONS;
     }
 
+    @GetMapping(TAGS)
+    public String updateTags(@CurrentAccount Account account,
+                             Model model) throws JsonProcessingException {
+        model.addAttribute(account);
+
+        Set<Tag> tags = accountService.getTags(account);
+        model.addAttribute("tags", tags.stream().map(Tag::getTitle).collect(Collectors.toList()));
+
+        List<String> allTags = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
+        model.addAttribute("whiteList", objectMapper.writeValueAsString(allTags));
+
+        return SETTINGS + TAGS;
+    }
+
+    @PostMapping(TAGS + "/add")
+    @ResponseBody
+    public ResponseEntity addTag(@CurrentAccount Account account, @RequestBody TagForm tagForm) {
+        Tag tag = tagService.findOrCreateNew(tagForm.getTagTitle());
+        accountService.addTag(account, tag);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(TAGS + "/remove")
+    @ResponseBody
+    public ResponseEntity removeTag(@CurrentAccount Account account, @RequestBody TagForm tagForm) {
+        String title = tagForm.getTagTitle();
+        Tag tag = tagRepository.findByTitle(title);
+        if (tag == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        accountService.removeTag(account, tag);
+        return ResponseEntity.ok().build();
+    }
 }
 
 
