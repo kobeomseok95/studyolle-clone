@@ -7,6 +7,9 @@ import com.clone.studyolle.mail.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,21 +34,13 @@ public class AccountService implements UserDetailsService {
     private final TemplateEngine templateEngine;
     private final EmailService emailService;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
-    }
-
     public Account processNewAccount(SignUpForm signUpForm) {
         Account newAccount = saveNewAccount(signUpForm);
         sendSignUpConfirmEmail(newAccount);
         return newAccount;
     }
 
-    /**
-     *  얘 분석하기!!
-     */
-    private void sendSignUpConfirmEmail(Account newAccount) {
+    public void sendSignUpConfirmEmail(Account newAccount) {
         Context context = new Context();
         context.setVariable("link", "/check-email-token?token=" + newAccount.getEmailCheckToken() +
                 "&email=" + newAccount.getEmail());
@@ -73,4 +70,69 @@ public class AccountService implements UserDetailsService {
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
+
+    /**
+     * 인증할 토큰을 생성한다. (User를 상속받은 객체(User는 시큐리티에서 정의한 UserDetails를 구현한 클래스,
+     *                      암호화된 비밀번호, ROLE 타입)
+     * SecurityContextHolder : 시큐리티의 인메모리 세션 저장소, 인증된 토큰을 여기에 저장한다.
+     * 해당 유저에게 jsession id와 응답을 내려준다.
+     * 해당 jsession id를 확인해서 유효하면 Authentication 획득
+     * @param account : 로그인할 객체
+     */
+    public void login(Account account) {
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(new UserAccount(account),
+                account.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        SecurityContextHolder.getContext().setAuthentication(token);
+    }
+
+    /**
+     * 모든 로그인 요청 시 이 메서드를 통해 DB에 갔다온다. DB에서 일치하는 회원이 있을 경우,
+     * User를 상속받은 UserAccount 객체의 필드에 account를 담아서 가져온다.
+     * @param emailOrNickname
+     * @return
+     * @throws UsernameNotFoundException
+     */
+    @Transactional(readOnly = true)
+    @Override
+    public UserDetails loadUserByUsername(String emailOrNickname) throws UsernameNotFoundException {
+        Account account = accountRepository.findByEmail(emailOrNickname);
+        if (account == null) {
+            account = accountRepository.findByNickname(emailOrNickname);
+        }
+
+        if (account == null) {
+            throw new UsernameNotFoundException(emailOrNickname);
+        }
+
+        return new UserAccount(account);
+    }
+
+    public void completeSignUp(Account account) {
+        account.completeSignUp();
+        login(account);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

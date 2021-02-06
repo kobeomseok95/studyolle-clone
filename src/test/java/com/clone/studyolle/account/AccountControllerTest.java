@@ -7,6 +7,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -24,6 +25,8 @@ class AccountControllerTest {
     MockMvc mockMvc;
     @MockBean
     SignUpFormValidator validator;
+    @MockBean
+    AccountService accountService;
 
     @DisplayName("회원가입 화면")
     @Test
@@ -37,6 +40,5 @@ class AccountControllerTest {
                 .andExpect(model().attributeExists("signUpForm"))
                 .andExpect(unauthenticated());
     }
-
 
 }
