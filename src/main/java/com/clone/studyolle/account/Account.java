@@ -1,6 +1,7 @@
 package com.clone.studyolle.account;
 
 import com.clone.studyolle.tag.Tag;
+import com.clone.studyolle.zone.Zone;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,6 +62,9 @@ public class Account {
 
     @ManyToMany
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToMany
+    private Set<Zone> zones = new HashSet<>();
 
     public void generateEmailCheckToken() {
         this.emailCheckToken = UUID.randomUUID().toString();

@@ -1,5 +1,6 @@
 package com.clone.studyolle.account;
 
+import com.clone.studyolle.account.form.NicknameForm;
 import com.clone.studyolle.account.form.Notifications;
 import com.clone.studyolle.account.form.PasswordForm;
 import com.clone.studyolle.account.form.Profile;
@@ -9,6 +10,9 @@ import com.clone.studyolle.tag.Tag;
 import com.clone.studyolle.tag.TagForm;
 import com.clone.studyolle.tag.TagRepository;
 import com.clone.studyolle.tag.TagService;
+import com.clone.studyolle.zone.Zone;
+import com.clone.studyolle.zone.ZoneForm;
+import com.clone.studyolle.zone.ZoneRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +53,7 @@ public class SettingsController {
     private final NicknameValidator nicknameValidator;
     private final TagService tagService;
     private final TagRepository tagRepository;
-    //    private final ZoneRepository zoneRepository;
+    private final ZoneRepository zoneRepository;
     private final ObjectMapper objectMapper;
 
     @InitBinder("passwordForm")
@@ -166,19 +170,62 @@ public class SettingsController {
         accountService.removeTag(account, tag);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping(ZONES)
+    public String updateZonesForm(@CurrentAccount Account account, Model model) throws JsonProcessingException{
+        model.addAttribute(account);
+
+        Set<Zone> zones = accountService.getZones(account);
+        model.addAttribute("zones", zones.stream().map(Zone::toString).collect(Collectors.toList()));
+
+        List<String> allZones = zoneRepository.findAll().stream().map(Zone::toString).collect(Collectors.toList());
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allZones));
+
+        return SETTINGS + ZONES;
+    }
+
+    @PostMapping(ZONES + "/add")
+    @ResponseBody
+    public ResponseEntity addZone(@CurrentAccount Account account, @RequestBody ZoneForm zoneForm) {
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+        if (zone == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        accountService.addZone(account, zone);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(ZONES + "/remove")
+    @ResponseBody
+    public ResponseEntity removeZone(@CurrentAccount Account account, @RequestBody ZoneForm zoneForm) {
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+        if (zone == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        accountService.removeZone(account, zone);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(ACCOUNT)
+    public String updateAccountForm(@CurrentAccount Account account, Model model) {
+
+        model.addAttribute(account);
+        model.addAttribute(modelMapper.map(account, NicknameForm.class));
+        return SETTINGS + ACCOUNT;
+    }
+
+    @PostMapping(ACCOUNT)
+    public String updateAccount(@CurrentAccount Account account, @Valid NicknameForm nicknameForm,
+                                Errors errors, Model model, RedirectAttributes attributes) {
+        if (errors.hasErrors()) {
+            model.addAttribute(account);
+            return SETTINGS + ACCOUNT;
+        }
+
+        accountService.updateNickname(account, nicknameForm.getNickname());
+        attributes.addFlashAttribute("message", "닉네임을 수정했습니다.");
+        return "redirect:/" + SETTINGS + ACCOUNT;
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
