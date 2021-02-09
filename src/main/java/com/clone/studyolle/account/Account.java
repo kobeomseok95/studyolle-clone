@@ -2,9 +2,7 @@ package com.clone.studyolle.account;
 
 import com.clone.studyolle.tag.Tag;
 import com.clone.studyolle.zone.Zone;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,6 +14,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
     @Id @GeneratedValue
