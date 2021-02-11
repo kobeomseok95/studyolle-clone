@@ -1,9 +1,12 @@
 package com.clone.studyolle.study;
 
 import com.clone.studyolle.account.Account;
+import com.clone.studyolle.study.event.StudyUpdateEvent;
+import com.clone.studyolle.study.form.StudyDescriptionForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,5 +43,22 @@ public class StudyService {
 
     public void removeMember(Study study, Account account) {
         study.removeMember(account);
+    }
+
+    public Study getStudyToUpdate(Account account, String path) {
+        Study study = this.getStudy(path);
+        checkIfManager(account, study);
+        return study;
+    }
+
+    private void checkIfManager(Account account, Study study) {
+        if (!study.isManagedBy(account)) {
+            throw new AccessDeniedException("해당 기능을 사용할 수 없습니다.");
+        }
+    }
+
+    public void updateStudyDescription(Study study, StudyDescriptionForm studyDescriptionForm) {
+        modelMapper.map(studyDescriptionForm, study);
+        eventPublisher.publishEvent(new StudyUpdateEvent(study, "스터디 소개를 수정했습니다."));
     }
 }
