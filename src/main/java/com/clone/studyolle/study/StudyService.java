@@ -21,4 +21,24 @@ public class StudyService {
         newStudy.addManager(account);
         return newStudy;
     }
+
+    public Study getStudy(String path) {
+        Study study = studyRepository.findByPath(path);
+        checkIfExistingStudy(path, study);
+        return study;
+    }
+
+    private void checkIfExistingStudy(String path, Study study) {
+        if (study == null) {
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+    }
+
+    public void addMember(Study study, Account account) {
+        study.addMember(account);
+    }
+
+    public void removeMember(Study study, Account account) {
+        study.removeMember(account);
+    }
 }
