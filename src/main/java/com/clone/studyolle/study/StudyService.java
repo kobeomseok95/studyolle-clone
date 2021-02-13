@@ -3,6 +3,7 @@ package com.clone.studyolle.study;
 import com.clone.studyolle.account.Account;
 import com.clone.studyolle.study.event.StudyUpdateEvent;
 import com.clone.studyolle.study.form.StudyDescriptionForm;
+import com.clone.studyolle.tag.Tag;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
@@ -68,5 +69,13 @@ public class StudyService {
 
     public void disableStudyBanner(Study study) {
         study.setUseBanner(false);
+    }
+
+    public void addTag(Study study, Tag tag) {
+        study.getTags().add(tag);
+    }
+
+    public void removeTag(Study study, Tag tag) {
+        study.getTags().remove(tag);
     }
 }
