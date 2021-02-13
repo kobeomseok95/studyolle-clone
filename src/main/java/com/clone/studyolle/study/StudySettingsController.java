@@ -50,4 +50,55 @@ public class StudySettingsController {
         attributes.addFlashAttribute("message", "스터디 소개를 수정했습니다.");
         return "redirect:/study/" + study.getEncodedPath() + "/settings/description";
     }
+
+    @GetMapping("/banner")
+    public String studyImageForm(@CurrentAccount Account account,
+                                 @PathVariable String path,
+                                 Model model) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+        return "study/settings/banner";
+    }
+
+    @PostMapping("/banner/enable")
+    public String enableStudyBanner(@CurrentAccount Account account,
+                                    @PathVariable String path) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        studyService.enableStudyBanner(study);
+        return "redirect:/study/" + study.getEncodedPath() + "/settings/banner";
+    }
+
+    @PostMapping("/banner/disable")
+    public String disableStudyBanner(@CurrentAccount Account account,
+                                     @PathVariable String path) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        studyService.disableStudyBanner(study);
+        return "redirect:/study/" + study.getEncodedPath() + "/settings/banner";
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
