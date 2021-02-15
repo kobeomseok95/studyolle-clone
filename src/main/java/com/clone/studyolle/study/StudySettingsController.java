@@ -7,6 +7,9 @@ import com.clone.studyolle.tag.Tag;
 import com.clone.studyolle.tag.TagForm;
 import com.clone.studyolle.tag.TagRepository;
 import com.clone.studyolle.tag.TagService;
+import com.clone.studyolle.zone.Zone;
+import com.clone.studyolle.zone.ZoneForm;
+import com.clone.studyolle.zone.ZoneRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class StudySettingsController {
     private final TagRepository tagRepository;
     private final ObjectMapper objectMapper;
     private final TagService tagService;
+    private final ZoneRepository zoneRepository;
 
     @GetMapping("/description")
     public String viewStudySetting(@CurrentAccount Account account, @PathVariable String path, Model model) {
@@ -126,6 +130,48 @@ public class StudySettingsController {
         }
 
         studyService.removeTag(study, tag);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/zones")
+    public String studyZonesForm(@CurrentAccount Account account, @PathVariable String path, Model model) throws JsonProcessingException {
+        Study study = studyService.getStudyToUpdate(account, path);
+        model.addAttribute(account);
+        model.addAttribute(study);
+        model.addAttribute("zones", study.getZones()
+                .stream()
+                .map(Zone::toString)
+                .collect(Collectors.toList()));
+        List<String> allZones = zoneRepository.findAll().stream().map(Zone::toString).collect(Collectors.toList());
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allZones));
+        return "study/settings/zones";
+    }
+
+    @PostMapping("/zones/add")
+    @ResponseBody
+    public ResponseEntity addZone(@CurrentAccount Account account, @PathVariable String path,
+                                  @RequestBody ZoneForm zoneForm) {
+        Study study = studyService.getStudyToUpdateZone(account, path);
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+        if (zone == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        studyService.addZone(study, zone);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/zones/remove")
+    @ResponseBody
+    public ResponseEntity removeZone(@CurrentAccount Account account, @PathVariable String path,
+                                     @RequestBody ZoneForm zoneForm) {
+        Study study = studyService.getStudyToUpdateZone(account, path);
+        Zone zone = zoneRepository.findByCityAndProvince(zoneForm.getCityName(), zoneForm.getProvinceName());
+        if (zone == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        studyService.removeZone(study, zone);
         return ResponseEntity.ok().build();
     }
 }
