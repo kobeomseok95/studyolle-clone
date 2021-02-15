@@ -89,4 +89,13 @@ public class Study {
     public boolean isManagedBy(Account account) {
         return this.getManagers().contains(account);
     }
+
+    public void publish() {
+        if (!this.closed && !this.published) {
+            this.published = true;
+            this.publishedDatetime = LocalDateTime.now();
+        } else {
+            throw new RuntimeException("스터디를 공개할 수 없는 상태입니다. 스터디를 이미 공개했거나 종료했습니다.");
+        }
+    }
 }

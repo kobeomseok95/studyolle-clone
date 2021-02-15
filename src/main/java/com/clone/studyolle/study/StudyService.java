@@ -1,6 +1,7 @@
 package com.clone.studyolle.study;
 
 import com.clone.studyolle.account.Account;
+import com.clone.studyolle.study.event.StudyCreatedEvent;
 import com.clone.studyolle.study.event.StudyUpdateEvent;
 import com.clone.studyolle.study.form.StudyDescriptionForm;
 import com.clone.studyolle.tag.Tag;
@@ -93,5 +94,17 @@ public class StudyService {
 
     public void removeZone(Study study, Zone zone) {
         study.getZones().remove(zone);
+    }
+
+    public Study getStudyToUpdateStatus(Account account, String path) {
+        Study study = studyRepository.findStudyWithManagersByPath(path);
+        checkIfExistingStudy(path, study);
+        checkIfManager(account, study);
+        return study;
+    }
+
+    public void publish(Study study) {
+        study.publish();
+        eventPublisher.publishEvent(new StudyCreatedEvent(study));
     }
 }
