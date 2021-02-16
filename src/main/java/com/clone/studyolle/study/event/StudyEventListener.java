@@ -21,6 +21,8 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 @Async
@@ -51,6 +53,25 @@ public class StudyEventListener {
                     }
                 }
         );
+    }
+
+    @EventListener
+    public void handleStudyUpdateEvent(StudyUpdateEvent studyUpdateEvent) {
+        Study study = studyRepository.findStudyWithManagersAndMembersById(studyUpdateEvent.getStudy().getId());
+        Set<Account> accounts = new HashSet<>();
+        accounts.addAll(study.getManagers());
+        accounts.addAll(study.getMembers());
+
+        accounts.forEach(account -> {
+            if (account.isStudyUpdatedByEmail()) {
+                sendStudyCreatedEmail(study, account, studyUpdateEvent.getMessage(),
+                        "스터디올래, '" + study.getTitle() + "' 스터디에 새소식이 있습니다.");
+            }
+
+            if (account.isStudyUpdatedByWeb()) {
+                createNotification(study, account, studyUpdateEvent.getMessage(), NotificationType.STUDY_UPDATED);
+            }
+        });
     }
 
     private void sendStudyCreatedEmail(Study study, Account account, String contextMessage, String emailSubject) {
