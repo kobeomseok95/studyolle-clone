@@ -1,6 +1,8 @@
 package com.clone.studyolle.event;
 
 import com.clone.studyolle.account.Account;
+import com.clone.studyolle.event.event.EnrollmentAcceptedEvent;
+import com.clone.studyolle.event.event.EnrollmentRejectedEvent;
 import com.clone.studyolle.event.form.EventForm;
 import com.clone.studyolle.study.Study;
 import com.clone.studyolle.study.event.StudyUpdateEvent;
@@ -43,6 +45,36 @@ public class EventService {
         eventRepository.delete(event);
         eventPublisher.publishEvent(new StudyUpdateEvent(event.getStudy(),
                 "'" + event.getTitle() + "' 모임을 취소했습니다."));
+    }
+
+    public void newEnrollment(Event event, Account account) {
+        if (!enrollmentRepository.existsByEventAndAccount(event, account)) {
+            Enrollment enrollment = new Enrollment();
+            enrollment.setEnrolledAt(LocalDateTime.now());
+            enrollment.setAccepted(event.isAbleToAcceptWaitingEnrollment());
+            enrollment.setAccount(account);
+            event.addEnrollment(enrollment);
+            enrollmentRepository.save(enrollment);
+        }
+    }
+
+    public void cancelEnrollment(Event event, Account account) {
+        Enrollment enrollment = enrollmentRepository.findByEventAndAccount(event, account);
+        if (!enrollment.isAttended()) {
+            event.removeEnrollment(enrollment);
+            enrollmentRepository.delete(enrollment);
+            event.acceptNextWaitingEnrollment();
+        }
+    }
+
+    public void acceptEnrollment(Event event, Enrollment enrollment) {
+        event.accept(enrollment);
+        eventPublisher.publishEvent(new EnrollmentAcceptedEvent(enrollment));
+    }
+
+    public void rejectEnrollment(Event event, Enrollment enrollment) {
+        event.reject(enrollment);
+        eventPublisher.publishEvent(new EnrollmentRejectedEvent(enrollment));
     }
 }
 

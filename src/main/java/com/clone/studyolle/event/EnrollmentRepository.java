@@ -1,4 +1,11 @@
 package com.clone.studyolle.event;
 
-public interface EnrollmentRepository {
+import com.clone.studyolle.account.Account;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
+
+    boolean existsByEventAndAccount(Event event, Account account);
+
+    Enrollment findByEventAndAccount(Event event, Account account);
 }
