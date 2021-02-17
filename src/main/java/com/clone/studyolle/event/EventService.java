@@ -76,6 +76,14 @@ public class EventService {
         event.reject(enrollment);
         eventPublisher.publishEvent(new EnrollmentRejectedEvent(enrollment));
     }
+
+    public void checkInEnrollment(Enrollment enrollment) {
+        enrollment.setAttended(true);
+    }
+
+    public void cancelCheckInEnrollment(Enrollment enrollment) {
+        enrollment.setAttended(false);
+    }
 }
 
 
