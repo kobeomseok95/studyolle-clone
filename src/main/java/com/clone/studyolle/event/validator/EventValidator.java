@@ -1,5 +1,6 @@
 package com.clone.studyolle.event.validator;
 
+import com.clone.studyolle.event.Event;
 import com.clone.studyolle.event.form.EventForm;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -42,5 +43,11 @@ public class EventValidator implements Validator {
     private boolean isNotValidEndEnrollmentDateTime(EventForm eventForm) {
         return eventForm.getEndEnrollmentDateTime()
                 .isBefore(LocalDateTime.now());
+    }
+
+    public void validateUpdateForm(EventForm eventForm, Event event, Errors errors) {
+        if (eventForm.getLimitOfEnrollments() < event.getNumberOfAcceptedEnrollments()) {
+            errors.rejectValue("limitOfEnrollments", "wrong.value", "확인된 참기 신청보다 모집 인원 수가 커야 합니다.");
+        }
     }
 }

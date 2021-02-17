@@ -1,6 +1,7 @@
 package com.clone.studyolle.event;
 
 import com.clone.studyolle.account.Account;
+import com.clone.studyolle.event.form.EventForm;
 import com.clone.studyolle.study.Study;
 import com.clone.studyolle.study.event.StudyUpdateEvent;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,19 @@ public class EventService {
         eventPublisher.publishEvent(new StudyUpdateEvent(event.getStudy(),
                 "'" + event.getTitle() + "' 모임을 만들었습니다."));
         return eventRepository.save(event);
+    }
+
+    public void updateEvent(Event event, EventForm eventForm) {
+        modelMapper.map(eventForm, event);
+        event.acceptWaitingList();
+        eventPublisher.publishEvent(new StudyUpdateEvent(event.getStudy(),
+                "'" + event.getTitle() + "' 모임 정보를 수정했으니 확인하세요."));
+    }
+
+    public void deleteEvent(Event event) {
+        eventRepository.delete(event);
+        eventPublisher.publishEvent(new StudyUpdateEvent(event.getStudy(),
+                "'" + event.getTitle() + "' 모임을 취소했습니다."));
     }
 }
 

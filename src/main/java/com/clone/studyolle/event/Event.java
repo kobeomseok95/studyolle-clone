@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @NamedEntityGraph(
         name = "Event.withEnrollments",
@@ -59,7 +60,31 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventType eventType;
 
+    public long getNumberOfAcceptedEnrollments() {
+        return this.enrollments
+                .stream()
+                .filter(Enrollment::isAccepted)
+                .count();
+    }
 
+    public void acceptWaitingList() {
+        if (this.isAbleToAcceptWaitingEnrollment()) {
+            var waitingList = getWaitingList();
+            int numberToAccept = (int) Math.min(this.limitOfEnrollments - this.getNumberOfAcceptedEnrollments(), waitingList.size());
+            getWaitingList().subList(0,numberToAccept).forEach(e -> e.setAccepted(true));
+        }
+    }
+
+    private List<Enrollment> getWaitingList() {
+        return this.enrollments
+                .stream()
+                .filter(enrollment -> !enrollment.isAccepted())
+                .collect(Collectors.toList());
+    }
+
+    private boolean isAbleToAcceptWaitingEnrollment() {
+        return this.eventType == EventType.FCFS && this.limitOfEnrollments > this.getNumberOfAcceptedEnrollments();
+    }
 }
 
 
