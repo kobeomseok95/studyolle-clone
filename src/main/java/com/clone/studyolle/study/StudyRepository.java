@@ -1,11 +1,17 @@
 package com.clone.studyolle.study;
 
+import com.clone.studyolle.account.Account;
+import com.clone.studyolle.tag.Tag;
+import com.clone.studyolle.zone.Zone;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Set;
+
 @Transactional(readOnly = true)
-public interface StudyRepository extends JpaRepository<Study, Long> {
+public interface StudyRepository extends JpaRepository<Study, Long>, StudyRepositoryExtension {
 
     boolean existsByPath(String path);
 
@@ -28,4 +34,11 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     Study findStudyWithManagersAndMembersById(Long id);
 
     Study findStudyOnlyByPath(String path);
+
+    @EntityGraph(attributePaths = {"zones", "tags"})
+    Study findFirst9ByPublishedAndClosedOrderByPublishedDateTimeDesc(boolean published, boolean closed);
+
+    List<Study> findFirst5ByManagersContainingAndClosedOrderByPublishedDateTimeDesc(Account account, boolean closed);
+
+    List<Study> findFirst5ByMembersContainingAndClosedOrderByPublishedDateTimeDesc(Account account, boolean closed);
 }
